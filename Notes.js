@@ -77,7 +77,7 @@ export default class Notes extends React.Component {
         <ScrollView style={styles.notes}>
           {this.state.notes.map(note => (
             <Text key={note} style={styles.note}>
-              {note}
+              {`- ${note}`}
             </Text>
           ))}
         </ScrollView>
@@ -114,6 +114,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ffffff',
     width: '100%',
+    padding: 16,
   },
   note: {
     color: '#ffffff',
