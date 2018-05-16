@@ -9,13 +9,14 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
 
-import ConnectionState from './components/ConnectionState';
+import withConnectionState from './components/ConnectionState';
 import CachedImage from './components/CachedImage';
 
-export default class Notes extends React.Component {
+class Notes extends React.Component {
   state = {
     notes: [],
     value: '',
@@ -31,6 +32,32 @@ export default class Notes extends React.Component {
 
   _onTextChange = input => {
     this.setState(({ value }) => ({ value: input }));
+  };
+
+  _removeNote = index => {
+    const oldNotes = this.state.notes;
+    const notes = this.state.notes.filter((note, i) => i !== index);
+    this.setState(() => ({ notes }));
+
+    try {
+      AsyncStorage.setItem('@notes', JSON.stringify(notes));
+    } catch (error) {
+      notes.pop();
+      this.setState(() => ({ notes: oldNotes }));
+      Alert.alert(`Failed to remove note: ${error.message}`);
+    }
+  };
+
+  _removeAllNotes = () => {
+    const oldNotes = this.state.notes;
+    this.setState(() => ({ notes: [] }));
+
+    try {
+      AsyncStorage.removeItem('@notes');
+    } catch (error) {
+      this.setState(() => ({ notes: oldNotes }));
+      Alert.alert(`Failed to remove notes: ${error.message}`);
+    }
   };
 
   _saveNote = () => {
@@ -52,8 +79,6 @@ export default class Notes extends React.Component {
       <View style={styles.container}>
         <StatusBar barStyle="light-content" />
 
-        <ConnectionState />
-
         <CachedImage
           style={styles.image}
           source={{
@@ -71,20 +96,42 @@ export default class Notes extends React.Component {
         />
 
         <View style={styles.button}>
-          <Button title="SAVE NOTE" onPress={this._saveNote} color="#ffffff" />
+          <Button
+            disabled={!this.props.isOnline}
+            title="SAVE NOTE"
+            onPress={this._saveNote}
+            color="#ffffff"
+          />
         </View>
 
         <ScrollView style={styles.notes}>
-          {this.state.notes.map(note => (
-            <Text key={note} style={styles.note}>
-              {`- ${note}`}
-            </Text>
+          {this.state.notes.map((note, index) => (
+            <View key={note} style={styles.noteListItem}>
+              <Text style={styles.note}>{`- ${note}`}</Text>
+              <TouchableOpacity
+                onPress={() => this._removeNote(index)}
+                style={styles.removeNoteButton}
+              >
+                <Text style={styles.removeNoteButtonText}>X</Text>
+              </TouchableOpacity>
+            </View>
           ))}
         </ScrollView>
+
+        <View style={styles.button}>
+          <Button
+            disabled={!this.props.isOnline}
+            title="DELETE NOTES"
+            onPress={this._removeAllNotes}
+            color="#ffffff"
+          />
+        </View>
       </View>
     );
   }
 }
+
+export default withConnectionState(Notes);
 
 const styles = StyleSheet.create({
   container: {
@@ -110,7 +157,7 @@ const styles = StyleSheet.create({
   },
   notes: {
     flex: 0,
-    maxHeight: 400,
+    maxHeight: 300,
     borderWidth: 1,
     borderColor: '#ffffff',
     width: '100%',
@@ -118,6 +165,11 @@ const styles = StyleSheet.create({
   },
   note: {
     color: '#ffffff',
+  },
+  removeNoteButtonText: {
+    color: '#ffffff',
+  },
+  noteListItem: {
     marginBottom: 8,
   },
   textInput: {
@@ -133,5 +185,10 @@ const styles = StyleSheet.create({
     borderColor: '#ffffff',
     marginBottom: 'auto',
     marginTop: 16,
+  },
+  noteListItem: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
 });
