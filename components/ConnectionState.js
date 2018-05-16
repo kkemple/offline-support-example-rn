@@ -12,7 +12,7 @@ const resolveConnectionStatus = type => {
   }
 };
 
-export default class StatusBar extends React.Component {
+export default class ConnectionState extends React.Component {
   state = {
     isOnline: true,
     animatedValue: new Animated.Value(0),
