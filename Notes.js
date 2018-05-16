@@ -42,7 +42,6 @@ class Notes extends React.Component {
     try {
       AsyncStorage.setItem('@notes', JSON.stringify(notes));
     } catch (error) {
-      notes.pop();
       this.setState(() => ({ notes: oldNotes }));
       Alert.alert(`Failed to remove note: ${error.message}`);
     }
